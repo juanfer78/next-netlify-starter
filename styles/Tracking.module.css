@@ -16,11 +16,30 @@
   align-items: start;
 }
 
+.topBar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+}
+
 .hero {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   animation: fadeUp 0.7s ease both;
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+  border-radius: 14px;
+  object-fit: contain;
 }
 
 .badge {

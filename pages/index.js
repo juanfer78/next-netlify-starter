@@ -71,6 +71,11 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
+        <div className={styles.topBar}>
+          <div className={styles.logoWrap}>
+            <img src="/logo.png" alt="Parcel Path" className={styles.logo} />
+          </div>
+        </div>
         <section className={styles.hero}>
           <span className={styles.badge}>Rastreador de envíos en vivo</span>
           <h1 className={styles.title}>Sigue cada paso de tu paquete.</h1>
@@ -114,7 +119,7 @@ export default function Home() {
                   <div className={styles.tracking}>{timeline.shipping}</div>
                 </div>
                 {lastStatus ? (
-                  <div className={styles.statusBadge}>{getEventStatus(lastStatus)}</div>
+                  <div className={styles.statusBadge}>{getEventStatus(lastStatus)}"ChangeforLogo"</div>
                 ) : null}
               </div>
               {lastStatus && lastMeta ? (
