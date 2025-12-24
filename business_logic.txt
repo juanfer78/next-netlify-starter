@@ -1,0 +1,105 @@
+import re
+import json
+from bs4 import BeautifulSoup
+import requests
+
+
+def extract_statuses(html: str):
+    soup = BeautifulSoup(html, "html.parser")
+    results = []
+    # All activity items in the status timeline
+    for item in soup.find_all("div", class_="widget-activity-item"):
+        # The second tbl-cell (the first one is the icon)
+        cell = None
+        cells = item.find_all("div", class_="tbl-cell")
+        if len(cells) < 2:
+            continue
+        cell = cells[1]
+        ps = cell.find_all("p")
+        if not ps:
+            continue
+        # First <p> has datetime + status
+        spans = ps[0].find_all("span")
+        if not spans:
+            continue
+        timestamp = spans[0].get_text(strip=True)
+        status = spans[1].get_text(strip=True) if len(spans) > 1 else ""
+        # Second <p> (if present) has detail
+        detail = ""
+        if len(ps) > 1:
+            detail = ps[1].get_text(strip=True)
+        # Skip rows that don't look like real statuses
+        if not timestamp:
+            continue
+        results.append(
+            {
+                "timestamp": timestamp,
+                "status": status,
+                "detail": detail,
+            }
+        )
+    return results
+
+def extract_tracking_json(html: str):
+    soup = BeautifulSoup(html, "html.parser")
+    # 1) Find the script that has AjaxBasicRequestPOSTSE or JSON.parse in it
+    script = None
+    for s in soup.find_all("script"):
+        txt = s.string or s.get_text()
+        if not txt:
+            continue
+        if "AjaxBasicRequestPOSTSE" in txt and "JSON.parse" in txt:
+            script = txt
+            break
+    if not script:
+        raise ValueError("Could not find AjaxBasicRequestPOSTSE script block")
+    # 2) Extract the inner JSON string inside JSON.parse(" ... ")
+    # This works even if the line is commented with //
+    m = re.search(r'JSON\.parse\("(.+?)"\)', script, re.DOTALL)
+    if not m:
+        raise ValueError("Could not find JSON.parse(\"...\") in script")
+    raw = m.group(1)
+    # 3) Unescape the JS string so we get pure JSON text
+    # (ControlBox will usually have \" and \n etc inside)
+    json_text = bytes(raw, "utf-8").decode("unicode_escape")
+    # 4) Load it as real JSON
+    data = json.loads(json_text)
+    return data
+
+def tracking_to_simple_status(json_data):
+    """
+    Turn the raw list of dicts into something simpler,
+    e.g. last status + full history.
+    """
+    # json_data looks like:
+    # [
+    #   {"shipping":"1900000153301","date":"6/29/2021 7:00:17 AM",
+    #    "location":"PASTO","status":"EN ZONA DE DISTRIBUCION", ...},
+    #   ...
+    # ]
+    # Sort by date if needed (they usually come newest-first)
+    # Here we just return as-is:
+    return {
+        "shipping": json_data[0]["shipping"] if json_data else None,
+        "last_status": json_data[0] if json_data else None,
+        "events": json_data,
+    }
+
+url = "https://zaicargo.controlbox.net/app/rastreo/rastreo.asp?I="
+payload = {
+    "nrogui": "SCL9821100087",
+    "Submit": "Buscar",
+    "ffw": "00001"
+}
+
+resp = requests.post(url, data=payload, headers={"User-Agent": "Mozilla/5.0"})
+data = extract_statuses(resp.text)
+result = tracking_to_simple_status(data)
+
+for event in result['events']:
+    event
+
+print(json.dumps(result, indent=2, ensure_ascii=False))
+
+guia = 'SCL9821100087'
+raw_html = fetch_html(guia)
