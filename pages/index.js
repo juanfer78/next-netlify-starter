@@ -119,7 +119,7 @@ export default function Home() {
                   <div className={styles.tracking}>{timeline.shipping}</div>
                 </div>
                 {lastStatus ? (
-                  <div className={styles.statusBadge}>{getEventStatus(lastStatus)}"ChangeforLogo"</div>
+                  <div className={styles.statusBadge}>{getEventStatus(lastStatus)}</div>
                 ) : null}
               </div>
               {lastStatus && lastMeta ? (
