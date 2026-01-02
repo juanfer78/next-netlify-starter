@@ -141,6 +141,15 @@
   color: #4a4036;
 }
 
+.warning {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  background: #fff2d6;
+  border: 1px solid #f2d2a2;
+  color: #7a4d1b;
+}
+
 .error {
   margin: 0;
   padding: 0.6rem 1rem;

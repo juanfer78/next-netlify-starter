@@ -27,11 +27,56 @@ const formatEventMeta = (event) => {
   return parts.join(' - ')
 }
 
+const MAX_TRACKING_LENGTH = 13
+const TRACKING_PATTERN = /^[A-Za-z]{3}98211[0-9]{5}$/
+
+const getTrackingWarning = (value) => {
+  if (!value) {
+    return ''
+  }
+  if (value.length > MAX_TRACKING_LENGTH) {
+    return `Máximo ${MAX_TRACKING_LENGTH} caracteres.`
+  }
+  if (value.length === MAX_TRACKING_LENGTH && !TRACKING_PATTERN.test(value)) {
+    return 'Formato inválido. Usa AAA98211#####.'
+  }
+  return ''
+}
+
+const getSubmitWarning = (value) => {
+  if (!value) {
+    return ''
+  }
+  if (value.length !== MAX_TRACKING_LENGTH) {
+    return `Completa ${MAX_TRACKING_LENGTH} caracteres: AAA98211#####.`
+  }
+  if (!TRACKING_PATTERN.test(value)) {
+    return 'Formato inválido. Usa AAA98211#####.'
+  }
+  return ''
+}
+
 export default function Home() {
   const [trackingNumber, setTrackingNumber] = useState('')
   const [timeline, setTimeline] = useState(null)
   const [error, setError] = useState('')
+  const [inputWarning, setInputWarning] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  const handleTrackingChange = (event) => {
+    const nextValue = event.target.value
+    const warning = getTrackingWarning(nextValue)
+    const limitedValue =
+      nextValue.length > MAX_TRACKING_LENGTH
+        ? nextValue.slice(0, MAX_TRACKING_LENGTH)
+        : nextValue
+
+    setTrackingNumber(limitedValue)
+    setInputWarning(warning)
+    if (error) {
+      setError('')
+    }
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -39,9 +84,18 @@ export default function Home() {
     const normalized = trackingNumber.trim()
     if (!normalized) {
       setTimeline(null)
+      setInputWarning('')
       setError('Ingresa un número de seguimiento para continuar.')
       return
     }
+    const submitWarning = getSubmitWarning(normalized)
+    if (submitWarning) {
+      setTimeline(null)
+      setInputWarning(submitWarning)
+      return
+    }
+
+    setInputWarning('')
 
     setIsLoading(true)
     try {
@@ -92,8 +146,10 @@ export default function Home() {
                 id="tracking-number"
                 className={styles.input}
                 type="text"
+                aria-describedby={inputWarning ? 'tracking-warning' : undefined}
+                aria-invalid={Boolean(inputWarning)}
                 value={trackingNumber}
-                onChange={(event) => setTrackingNumber(event.target.value)}
+                onChange={handleTrackingChange}
                 placeholder="Ej: SCL9821100087"
                 autoComplete="off"
               />
@@ -103,6 +159,11 @@ export default function Home() {
             </button>
           </form>
           <p className={styles.helper}>Consejo: prueba SCL9821100087 para ver una demo.</p>
+          {inputWarning ? (
+            <p className={styles.warning} role="alert" id="tracking-warning">
+              {inputWarning}
+            </p>
+          ) : null}
           {error ? (
             <p className={styles.error} role="alert">
               {error}
