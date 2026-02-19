@@ -230,6 +230,15 @@
   color: #5b4c3f;
 }
 
+.noActivity {
+  margin: 0.6rem 0 0;
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  background: #fff5dd;
+  border: 1px solid #f0d4a4;
+  color: #7a4d1b;
+}
+
 .timeline {
   list-style: none;
   padding: 0;

@@ -116,6 +116,7 @@ export default function Home() {
   const orderedEvents = timeline ? [...timeline.events].slice().reverse() : []
   const lastStatus = timeline?.last_status
   const lastMeta = lastStatus ? formatEventMeta(lastStatus) : ''
+  const hasEvents = orderedEvents.length > 0
 
   return (
     <div className={styles.page}>
@@ -186,23 +187,29 @@ export default function Home() {
               {lastStatus && lastMeta ? (
                 <p className={styles.sub}>Último escaneo - {lastMeta}</p>
               ) : null}
-              <ul className={styles.timeline}>
-                {orderedEvents.map((event, index) => (
-                  <li
-                    className={styles.timelineItem}
-                    key={`${getEventTimestamp(event) || event.status || index}-${index}`}
-                    style={{ animationDelay: `${index * 80}ms` }}
-                  >
-                    <div className={styles.timelineDot} />
-                    <div className={styles.timelineContent}>
-                      <div className={styles.eventStatus}>{getEventStatus(event)}</div>
-                      <div className={styles.eventMeta}>
-                        {formatEventMeta(event)}
+              {hasEvents ? (
+                <ul className={styles.timeline}>
+                  {orderedEvents.map((event, index) => (
+                    <li
+                      className={styles.timelineItem}
+                      key={`${getEventTimestamp(event) || event.status || index}-${index}`}
+                      style={{ animationDelay: `${index * 80}ms` }}
+                    >
+                      <div className={styles.timelineDot} />
+                      <div className={styles.timelineContent}>
+                        <div className={styles.eventStatus}>{getEventStatus(event)}</div>
+                        <div className={styles.eventMeta}>
+                          {formatEventMeta(event)}
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={styles.noActivity} role="status">
+                  Aún no hay actividad registrada para este envío. Vuelve a consultar en unas horas.
+                </p>
+              )}
             </>
           ) : (
             <div className={styles.empty}>
