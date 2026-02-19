@@ -16,6 +16,11 @@ const decodeHtml = (value) => {
 const cleanText = (value) =>
   decodeHtml(String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim())
 
+const stripJsComments = (value) =>
+  String(value || '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+
 const looksLikeTemplateText = (value) => {
   if (!value) {
     return false
@@ -97,7 +102,8 @@ const extractTrackingJson = (html) => {
   if (!script) {
     throw new Error('Could not find AjaxBasicRequestPOSTSE script block')
   }
-  const match = script.match(/JSON\.parse\("([\s\S]*?)"\)/)
+  const uncommentedScript = stripJsComments(script)
+  const match = uncommentedScript.match(/JSON\.parse\("([\s\S]*?)"\)/)
   if (!match) {
     throw new Error('Could not find JSON.parse("...") in script')
   }
@@ -142,7 +148,11 @@ export default async function handler(req, res) {
     const html = await response.text()
     let data = extractStatuses(html)
     if (!data.length) {
-      data = extractTrackingJson(html)
+      try {
+        data = extractTrackingJson(html)
+      } catch {
+        data = []
+      }
     }
     const result = trackingToSimpleStatus(data, tracking)
     res.status(200).json(result)
